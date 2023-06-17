@@ -90,6 +90,18 @@
             cursor: pointer;
             float: right;
         }
+
+        .continue-shopping-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -107,6 +119,7 @@
     </div>
 
     <button id="emptyCartButton" class="empty-cart-button">Vaciar Carrito de Compra</button>
+    <a href="compraArticulo.html"><button class="continue-shopping-button">Seguir comprando</button></a>
 
     <script>
         var carritoUrl = "https://t9-af-2016630581.azurewebsites.net/api/ObtenerArticulosCarrito?code=eXsRTLhYXtuaCl_x92uDtk9UsrczKmFI2EkyMvgEM7-yAzFufXQyjw==";
