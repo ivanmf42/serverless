@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Artículos en el Carrito</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .thumbnail {
+            max-width: 100px;
+            max-height: 100px;
+        }
+
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .empty-cart-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>Artículos en el Carrito</h1>
+    <div id="articulosList"></div>
+    <p id="costoTotal"></p>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalMessage"></p>
+            <button id="confirmButton">Sí</button>
+            <button id="cancelButton">No</button>
+        </div>
+    </div>
+
+    <button id="emptyCartButton" class="empty-cart-button">Vaciar Carrito de Compra</button>
+
+    <script>
+        var carritoUrl = "https://t9-af-2016630581.azurewebsites.net/api/ObtenerArticulosCarrito?code=eXsRTLhYXtuaCl_x92uDtk9UsrczKmFI2EkyMvgEM7-yAzFufXQyjw==";
+        var eliminarUrl = "https://t9-af-2016630581.azurewebsites.net/api/carrito/{id}?code=bNDNPReLV2xj0Sd4XhvegeAcrwm22w6uhmTyf9VUzD1IAzFujEgpUA==";
+        var actualizarCantidadUrl = "https://t9-af-2016630581.azurewebsites.net/api/ActualizarCantidad/{id}?code=0jDDDzJ8pMjA2KcpyLB3S0La-VgzGdYvQB0MIjNtH7r6AzFuBkMYpg==";
+        var vaciarCarritoUrl = "https://t9-af-2016630581.azurewebsites.net/api/carrito?code=1cKlA9si7LnttlBJ9EOMv3YsJwfePXpTmORSBkOt_WVGAzFunpLGjQ==";
+        var costoTotalUrl = "https://t9-af-2016630581.azurewebsites.net/api/ObtenerCostoTotalCarrito?code=4cugZlTTxgUMmUtggrteKh9Mx-QyjQAP_DvprcP8mGVPAzFuy2Y8AA==";
+
+        // Función para mostrar los artículos en el carrito
+        function mostrarArticulosEnCarrito() {
+            var articulosList = document.getElementById("articulosList");
+            articulosList.innerHTML = "";
+
+            fetch(carritoUrl)
+                .then(function (response) {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error("Error al obtener los artículos del carrito.");
+                    }
+                })
+                .then(function (data) {
+                    if (data.length === 0) {
+                        articulosList.innerHTML = "<p>No hay artículos en el carrito.</p>";
+                    } else {
+                        var table = document.createElement("table");
+                        var thead = document.createElement("thead");
+                        var tbody = document.createElement("tbody");
+
+                        // Encabezados de la tabla
+                        var headers = ["ID", "Nombre", "Foto", "Cantidad", "Acciones"];
+                        var trHead = document.createElement("tr");
+                        headers.forEach(function (header) {
+                            var th = document.createElement("th");
+                            th.textContent = header;
+                            trHead.appendChild(th);
+                        });
+                        thead.appendChild(trHead);
+                        table.appendChild(thead);
+
+                        // Filas de la tabla
+                        data.forEach(function (articulo) {
+                            var tr = document.createElement("tr");
+
+                            // ID
+                            var tdId = document.createElement("td");
+                            tdId.textContent = articulo.id;
+                            tr.appendChild(tdId);
+
+                            // Nombre
+                            var tdNombre = document.createElement("td");
+                            tdNombre.textContent = articulo.nombre;
+                            tr.appendChild(tdNombre);
+
+                            // Foto
+                            var tdFoto = document.createElement("td");
+                            var img = document.createElement("img");
+                            img.src = "data:image/png;base64," + articulo.fotografia;
+                            img.alt = articulo.nombre;
+                            img.classList.add("thumbnail");
+                            tdFoto.appendChild(img);
+                            tr.appendChild(tdFoto);
+
+                            // Cantidad
+                            var tdCantidad = document.createElement("td");
+                            tdCantidad.textContent = articulo.cantidad;
+                            tr.appendChild(tdCantidad);
+
+                            // Acciones
+                            var tdAcciones = document.createElement("td");
+
+                            var decrementButton = document.createElement("button");
+                            decrementButton.textContent = "-";
+                            decrementButton.classList.add("delete-button");
+                            decrementButton.addEventListener("click", function () {
+                                actualizarCantidad(articulo.id, articulo.cantidad - 1);
+                            });
+                            tdAcciones.appendChild(decrementButton);
+
+                            var incrementButton = document.createElement("button");
+                            incrementButton.textContent = "+";
+                            incrementButton.classList.add("delete-button");
+                            incrementButton.addEventListener("click", function () {
+                                actualizarCantidad(articulo.id, articulo.cantidad + 1);
+                            });
+                            tdAcciones.appendChild(incrementButton);
+
+                            var updateButton = document.createElement("button");
+                            updateButton.textContent = "Actualizar";
+                            updateButton.classList.add("delete-button");
+                            updateButton.addEventListener("click", function () {
+                                actualizarCantidad(articulo.id, articulo.cantidad);
+                            });
+                            tdAcciones.appendChild(updateButton);
+
+                            var deleteButton = document.createElement("button");
+                            deleteButton.textContent = "Eliminar";
+                            deleteButton.classList.add("delete-button");
+                            deleteButton.addEventListener("click", function () {
+                                showModal(articulo.id);
+                            });
+                            tdAcciones.appendChild(deleteButton);
+
+                            tr.appendChild(tdAcciones);
+
+                            tbody.appendChild(tr);
+                        });
+
+                        table.appendChild(tbody);
+                        articulosList.appendChild(table);
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        // Función para mostrar el modal de confirmación
+        function showModal(articuloId) {
+            var modal = document.getElementById("myModal");
+            var modalMessage = document.getElementById("modalMessage");
+            var confirmButton = document.getElementById("confirmButton");
+            var cancelButton = document.getElementById("cancelButton");
+
+            modalMessage.textContent = "¿Estás seguro de eliminar el artículo con ID " + articuloId + "?";
+            modal.style.display = "block";
+
+            confirmButton.onclick = function () {
+                eliminarArticulo(articuloId);
+            };
+
+            cancelButton.onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        // Función para eliminar un artículo del carrito
+        function eliminarArticulo(articuloId) {
+            var url = eliminarUrl.replace("{id}", articuloId);
+
+            fetch(url, {
+                method: "DELETE"
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        alert("Artículo eliminado del carrito exitosamente.");
+                        mostrarArticulosEnCarrito();
+                        obtenerCostoTotalCarrito();
+                    } else if (response.status === 404) {
+                        throw new Error("El artículo no existe en el carrito.");
+                    } else {
+                        throw new Error("Error al eliminar el artículo del carrito.");
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        // Función para actualizar la cantidad de un artículo en el carrito
+        function actualizarCantidad(articuloId, cantidad) {
+            var url = actualizarCantidadUrl.replace("{id}", articuloId);
+
+            fetch(url, {
+                method: "PUT",
+                body: JSON.stringify({ cantidad: cantidad }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        mostrarArticulosEnCarrito();
+                        obtenerCostoTotalCarrito();
+                    } else if (response.status === 404) {
+                        throw new Error("El artículo no existe en el carrito.");
+                    } else {
+                        throw new Error("Error al actualizar la cantidad del artículo en el carrito.");
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        // Función para vaciar el carrito de compra
+        function vaciarCarrito() {
+            fetch(vaciarCarritoUrl, {
+                method: "DELETE"
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        alert("El carrito se ha vaciado correctamente.");
+                        mostrarArticulosEnCarrito();
+                        obtenerCostoTotalCarrito();
+                    } else {
+                        throw new Error("Error al vaciar el carrito de compra.");
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        // Función para obtener el costo total del carrito de compra
+        function obtenerCostoTotalCarrito() {
+            fetch(costoTotalUrl)
+                .then(function (response) {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error("Error al obtener el costo total del carrito.");
+                    }
+                })
+                .then(function (data) {
+                    var costoTotal = parseFloat(data).toFixed(2);
+                    var costoTotalElement = document.getElementById("costoTotal");
+                    costoTotalElement.textContent = "Costo Total del Carrito: $" + costoTotal;
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        // Función para cerrar el modal
+        var closeModal = document.getElementsByClassName("close")[0];
+        closeModal.onclick = function () {
+            var modal = document.getElementById("myModal");
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (event) {
+            var modal = document.getElementById("myModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // Mostrar los artículos en el carrito al cargar la página
+        mostrarArticulosEnCarrito();
+        obtenerCostoTotalCarrito();
+
+        // Vaciar el carrito de compra
+        var emptyCartButton = document.getElementById("emptyCartButton");
+        emptyCartButton.onclick = function () {
+            if (confirm("¿Estás seguro de vaciar el carrito de compra?")) {
+                vaciarCarrito();
+            }
+        };
+    </script>
+</body>
+</html>

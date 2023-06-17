@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Buscar Artículos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .thumbnail {
+            max-width: 100px;
+            max-height: 100px;
+        }
+
+        .description-button {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Buscar Artículos</h1>
+    <form id="buscarForm">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
+
+        <input type="submit" value="Buscar">
+    </form>
+
+    <div id="articulosList"></div>
+
+    <button class="cart-button" onclick="location.href='carrito.html'">Carrito de Compra</button>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="descripcionModal"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("buscarForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Evitar el envío del formulario
+
+            var nombre = document.getElementById("nombre").value;
+
+            var url = "https://t9-af-2016630581.azurewebsites.net/api/GetArticulos?nombre=" + encodeURIComponent(nombre) + "&code=u6z8LfpTkHiX_BHLxJFueQ71XTa5NF6V163Kxr0wLzC7AzFuvOIfig==";
+
+            fetch(url)
+                .then(function (response) {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error("Error al obtener los artículos.");
+                    }
+                })
+                .then(function (data) {
+                    mostrarArticulos(data);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        });
+
+        function mostrarArticulos(articulos) {
+            var articulosList = document.getElementById("articulosList");
+            articulosList.innerHTML = "";
+
+            if (articulos.length === 0) {
+                articulosList.innerHTML = "<p>No se encontraron artículos.</p>";
+                return;
+            }
+
+            var table = document.createElement("table");
+            var thead = document.createElement("thead");
+            var tbody = document.createElement("tbody");
+
+            // Encabezados de la tabla
+            var headers = ["ID", "Nombre", "Foto", "Acciones"];
+            var trHead = document.createElement("tr");
+            headers.forEach(function (header) {
+                var th = document.createElement("th");
+                th.textContent = header;
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+            table.appendChild(thead);
+
+            // Filas de la tabla
+            articulos.forEach(function (articulo) {
+                var tr = document.createElement("tr");
+
+                // ID
+                var tdId = document.createElement("td");
+                tdId.textContent = articulo.id;
+                tr.appendChild(tdId);
+
+                // Nombre
+                var tdNombre = document.createElement("td");
+                tdNombre.textContent = articulo.nombre;
+                tr.appendChild(tdNombre);
+
+                // Foto
+                var tdFoto = document.createElement("td");
+                var img = document.createElement("img");
+                img.src = "data:image/png;base64," + articulo.fotografia;
+                img.alt = articulo.nombre;
+                img.classList.add("thumbnail");
+                tdFoto.appendChild(img);
+                tr.appendChild(tdFoto);
+
+                // Acciones
+                var tdAcciones = document.createElement("td");
+                var descripcionButton = document.createElement("button");
+                descripcionButton.textContent = "Descripción";
+                descripcionButton.classList.add("description-button");
+                descripcionButton.addEventListener("click", function () {
+                    var modal = document.getElementById("myModal");
+                    var descripcionModal = document.getElementById("descripcionModal");
+                    descripcionModal.textContent = articulo.descripcion;
+                    modal.style.display = "block";
+                });
+
+                var cantidadInput = document.createElement("input");
+                cantidadInput.type = "number";
+                cantidadInput.min = 1;
+                cantidadInput.value = 1;
+
+                var comprarButton = document.createElement("button");
+                comprarButton.textContent = "Comprar";
+                comprarButton.addEventListener("click", function () {
+                    var articuloId = articulo.id;
+                    var cantidad = parseInt(cantidadInput.value);
+
+                    var carritoData = {
+                        articuloId: articuloId,
+                        cantidad: cantidad
+                    };
+
+                    var url = "https://t9-af-2016630581.azurewebsites.net/api/AgregarAlCarrito?code=ImzbnDNe1ddm9h30IY8voMngBl7-GOiovO1NFYdV9VGFAzFuRgxTZg==";
+
+                    fetch(url, {
+                        method: "POST",
+                        body: JSON.stringify(carritoData),
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    })
+                    .then(function (response) {
+                        if (response.ok) {
+                            alert("Artículo agregado al carrito exitosamente.");
+                        } else {
+                            throw new Error("Error al agregar el artículo al carrito.");
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error(error);
+                    });
+                });
+
+                tdAcciones.appendChild(descripcionButton);
+                tdAcciones.appendChild(cantidadInput);
+                tdAcciones.appendChild(comprarButton);
+                tr.appendChild(tdAcciones);
+
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            articulosList.appendChild(table);
+        }
+
+        var closeModal = document.getElementsByClassName("close")[0];
+        var modal = document.getElementById("myModal");
+
+        closeModal.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    </script>
+</body>
+</html>
